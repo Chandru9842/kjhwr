@@ -1,246 +1,353 @@
-# UK Wind Intelligence — National Wind Generation & Forecast Analytics
+<div align="center">
 
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688.svg?style=flat&logo=fastapi)](https://fastapi.tiangolo.com)
-[![React](https://img.shields.io/badge/React-19.0-61DAFB.svg?style=flat&logo=react)](https://react.dev)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-3178C6.svg?style=flat&logo=typescript)](https://www.typescriptlang.org)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-38B2AC.svg?style=flat&logo=tailwind-css)](https://tailwindcss.com)
-[![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED.svg?style=flat&logo=docker)](https://www.docker.com)
-[![Data Source: Elexon BMRS](https://img.shields.io/badge/Data_Source-Elexon_BMRS-003366.svg)](https://data.elexon.co.uk/bmrs/api/v1)
+# UK Wind Intelligence Platform
+### High-Precision National Wind Generation & Day-Ahead Forecast Benchmarking
 
-A high-precision, production-grade intelligence platform engineered for energy traders, power market analysts, and grid operators to audit, evaluate, and benchmark UK national wind generation actuals against Day-Ahead forecasts published on the Elexon Balancing Mechanism Reporting Service (BMRS).
+[![Deployment Status](https://img.shields.io/badge/Deployment-Live%20on%20Vercel-black?style=for-the-badge&logo=vercel)](https://kjhwr-theta.vercel.app/)
+[![Backend Architecture](https://img.shields.io/badge/Backend-FastAPI%20%7C%20Python%203.12-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
+[![Frontend Architecture](https://img.shields.io/badge/Frontend-React%2019%20%7C%20TypeScript-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
+[![Docker](https://img.shields.io/badge/Containers-Docker%20Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com)
+[![Data Source](https://img.shields.io/badge/Data%20Source-Elexon%20BMRS%20Open%20Data-003366?style=for-the-badge)](https://data.elexon.co.uk/bmrs/api/v1)
+
+<p align="center">
+  <a href="https://kjhwr-theta.vercel.app/"><strong>Explore Live Dashboard »</strong></a>
+  <br />
+  <br />
+  <a href="#system-architecture">Architecture</a> •
+  <a href="#key-capabilities">Key Capabilities</a> •
+  <a href="#analytical-methodology">Methodology</a> •
+  <a href="#rest-api-specification">API Reference</a> •
+  <a href="#local-development">Local Setup</a> •
+  <a href="#production-deployment">Deployment Guide</a>
+</p>
+
+</div>
 
 ---
 
-## Live Deployments (Placeholders)
+## Executive Summary
 
-| Component | Target Hosting | Live URL | Status |
+**UK Wind Intelligence** is an institutional-grade power market analytics platform engineered for electricity traders, power desk quants, and transmission operators. It automates the extraction, chronological pairing, and error benchmarking of Great Britain's national wind generation actuals against Day-Ahead hourly forecasts published on the **Elexon Balancing Mechanism Reporting Service (BMRS)**.
+
+The system enforces strict **Day-Ahead Decision Gate Closure compliance** (12:00 UTC cutoff on D-1), eliminating look-ahead data leakage and providing mathematically rigorous metrics—**Mean Absolute Error (MAE)**, **Root Mean Square Error (RMSE)**, and **Directional Forecast Bias**—across all 48 half-hour settlement periods per day.
+
+---
+
+## Live Deployments
+
+| Component | Target Platform | Endpoint / Live URL | Health Status |
 | :--- | :--- | :--- | :--- |
-| **Frontend Web App** | Vercel | [https://kjhwr-theta.vercel.app/](https://kjhwr-theta.vercel.app/) | Deployed (Active) |
-| **Backend REST API** | Render / Railway | `https://<your-backend-app>.onrender.com` | Ready to Deploy |
-| **Interactive API Docs** | Swagger / OpenAPI | `https://<your-backend-app>.onrender.com/docs` | Ready to Deploy |
-| **API Health Check** | FastAPI Probe | `https://<your-backend-app>.onrender.com/health` | Ready to Deploy |
+| **Frontend Web App** | Vercel Edge CDN | [https://kjhwr-theta.vercel.app/](https://kjhwr-theta.vercel.app/) | ![Operational](https://img.shields.io/badge/Status-Active-2ea44f?style=flat-square) |
+| **Backend REST API** | Render / Railway | `https://<your-backend-app>.onrender.com` | ![Ready](https://img.shields.io/badge/Status-Ready%20to%20Deploy-blue?style=flat-square) |
+| **Interactive API Docs** | Swagger / OpenAPI | `https://<your-backend-app>.onrender.com/docs` | ![OpenAPI 3.1](https://img.shields.io/badge/Docs-Swagger%20UI-009688?style=flat-square) |
+| **System Health Probe**| FastAPI Endpoint | `https://<your-backend-app>.onrender.com/health` | ![Health Check](https://img.shields.io/badge/Endpoint-GET%20%2Fhealth-lightgrey?style=flat-square) |
 
 ---
 
-## 1. Product Overview & Key Features
+## Key Capabilities
 
-UK Wind Intelligence bridges raw grid telemetry and actionable trading intelligence. Inspired by modern fintech and design systems (Mobbin/Linear style), it delivers maximum data density with zero visual clutter:
-
-- **Day-Ahead Decision Gate Closure Compliance**: Enforces strict historical publication cutoffs (e.g. 12:00 UTC on D-1 for delivery day D) to prevent look-ahead bias and simulate realistic pre-market trading decisions.
-- **Core Accuracy Benchmarks**: Real-time evaluation of:
-  - **MAE (Mean Absolute Error)**: Quantifies the average magnitude of forecast deviations in megawatts (MW).
-  - **RMSE (Root Mean Square Error)**: Penalizes extreme outliers to expose volatile forecast swings.
-  - **Forecast Bias**: Discloses systematic over-forecasting ($+$ bias) or under-forecasting ($-$ bias) across settlement periods.
-  - **Matched Coverage Rate (%)**: Audits the percentage of settlement intervals successfully paired.
-- **Multi-Curve Visualization**: Dual-line charts displaying outturn generation vs. Day-Ahead forecasts with capacity bands, interactive hover tooltips, and dynamic interval highlights.
-- **Granular Settlement Audit**: Detailed half-hourly tabular inspection across all 48 settlement periods per day, complete with publication timestamps, target intervals, absolute errors, and percentage variances.
-- **Dedicated Analytical Sub-views**:
-  - **Overview**: Core KPIs, interactive filter toolbar (date range, cutoff time, capacity banding), and headline actuals vs. forecast trends.
-  - **Forecast Accuracy**: Error distribution histograms, capacity band breakdowns (Low, Medium, High wind regimes), and statistical error metrics.
-  - **Forecast History**: Historical forecast publication version logs, lookback analysis, and gate closure validation.
-  - **Data Quality & Diagnostics**: Settlement completeness audit, missing period detection, BMRS API latency tracking, and cache hit/miss statistics.
+- **Strict Gate Closure Compliance**: Disqualifies any forecast published after the user-specified cutoff time (default: `12:00` UTC on D-1 for delivery on Day D). For each delivery interval, it selects the latest valid forecast issued prior to the cutoff threshold.
+- **Resolution Normalization**: Bridges the structural mismatch between 1-hour WINDFOR forecast publications and 30-minute FUELHH outturn settlement periods.
+- **Statistical Accuracy Engine**:
+  - **MAE (Mean Absolute Error)**: Measures average deviation magnitude in megawatts (MW).
+  - **RMSE (Root Mean Square Error)**: Highlights volatility and severe forecast excursions.
+  - **Forecast Bias**: Discloses systematic over-forecasting ($+$ bias) or under-forecasting ($-$ bias).
+  - **Matched Coverage Rate**: Verifies data completeness across the target window.
+- **Trading Desk Sub-Views**:
+  - **Overview**: Real-time KPI summaries, multi-curve visualization (Actual vs. Forecast with capacity bands), and interactive filter toolbars.
+  - **Forecast Accuracy**: Error distribution histograms and capacity band analyses (Low, Medium, High wind regimes).
+  - **Forecast History**: Multi-version publication logs, gate closure lookback comparisons, and lead-time audit trails.
+  - **Data Quality & Diagnostics**: Settlement completeness audit, missing interval tracking, upstream BMRS latency monitoring, and deterministic cache telemetry.
 
 ---
 
-## 2. System Architecture & Directory Structure
+## System Architecture
 
-The platform follows a decoupled, cloud-ready architecture:
+```mermaid
+flowchart TD
+    subgraph Upstream["Upstream Data Source (Elexon BMRS)"]
+        BMRS_FUELHH["Elexon BMRS API<br/>/datasets/FUELHH (WIND Actuals)<br/>30-Min Settlement Periods"]
+        BMRS_WINDFOR["Elexon BMRS API<br/>/datasets/WINDFOR (Forecasts)<br/>Hourly Delivery Bands"]
+    end
+
+    subgraph BackendEngine["Python FastAPI Analytics Engine"]
+        HTTPX["Resilient HTTPX Client<br/>• Exponential Backoff<br/>• 6-Day Chunking Engine"]
+        CACHE["Deterministic Cache<br/>Disk-backed JSON Storage"]
+        SELECTOR["Gate Closure Selector<br/>Enforces Cutoff (12:00 UTC D-1)"]
+        MATCHER["Settlement Matcher<br/>Hourly to 30-Min Resolution"]
+        ANALYTICS["Analytics Core<br/>• MAE / RMSE / Bias<br/>• Capacity Band Breakdown"]
+        API_ROUTES["FastAPI REST Routes<br/>/health • /analytics • /diagnostics"]
+    end
+
+    subgraph FrontendApp["React 19 Frontend Dashboard"]
+        VITE_APP["Vite Client Application<br/>Tailwind CSS • Recharts • Lucide"]
+        PAGES["Analytical Views<br/>Overview • Accuracy • History • Diagnostics"]
+    end
+
+    BMRS_FUELHH -->|Outturn Data| HTTPX
+    BMRS_WINDFOR -->|Forecast Runs| HTTPX
+    HTTPX <--> CACHE
+    HTTPX --> SELECTOR
+    SELECTOR --> MATCHER
+    MATCHER --> ANALYTICS
+    ANALYTICS --> API_ROUTES
+    API_ROUTES -->|JSON Payloads (CORS)| VITE_APP
+    VITE_APP --> PAGES
+```
+
+---
+
+## Repository Directory Structure
 
 ```
 kjhwr/
-├── .env.example              # Master environment configuration template
-├── .gitignore                # Production Git exclusion rules
-├── docker-compose.yml        # Orchestration for local containerized stack
-├── README.md                 # Project documentation & deployment manual
-├── backend/                  # Python FastAPI Backend
-│   ├── .env.example          # Backend-specific environment template
-│   ├── Dockerfile            # Container configuration with dynamic $PORT support
-│   ├── requirements.txt      # Pinned Python dependencies
+├── .env.example                     # Unified environment template with safe placeholders
+├── .gitignore                       # Production rules (excludes secrets, build dirs & cache)
+├── docker-compose.yml               # Multi-container orchestration with health dependencies
+├── README.md                        # Master architectural and operational manual
+│
+├── backend/                         # High-performance FastAPI analytics backend
+│   ├── .env.example                 # Backend environment variable template
+│   ├── Dockerfile                   # Python 3.12-slim container with dynamic $PORT support
+│   ├── requirements.txt             # Locked Python production dependencies
 │   ├── app/
-│   │   ├── main.py           # FastAPI entrypoint & Starlette CORS configuration
-│   │   ├── config.py         # Pydantic v2 application settings
+│   │   ├── main.py                  # Application factory, Starlette CORS middleware
+│   │   ├── config.py                # Pydantic v2 application settings
 │   │   ├── api/
-│   │   │   └── routes.py     # Endpoints (/health, /diagnostics, /analytics)
-│   │   ├── models/
-│   │   │   └── schemas.py    # Request/Response validation models
+│   │   │   ├── routes.py            # Endpoints (/health, /diagnostics, /analytics)
+│   │   │   └── schemas.py           # Request & response Pydantic schemas
 │   │   ├── services/
-│   │   │   ├── elexon_client.py     # BMRS API client (FUELHH & WINDFOR)
-│   │   │   ├── forecast_selector.py # Gate closure cutoff filtering
-│   │   │   ├── matcher.py           # Hourly-to-half-hourly settlement matching
-│   │   │   ├── analytics.py         # MAE, RMSE, Bias & capacity calculations
-│   │   │   └── cache.py             # File-backed deterministic cache
+│   │   │   ├── elexon_client.py     # Resilient chunked BMRS API client
+│   │   │   ├── forecast_selector.py # Decision gate closure cutoff enforcement
+│   │   │   ├── matcher.py           # Hourly-to-half-hourly settlement pairing
+│   │   │   ├── analytics.py         # Vectorized KPI & capacity band calculations
+│   │   │   └── cache.py             # Deterministic disk-backed response cache
 │   │   └── utils/
-│   │       └── time.py       # UTC chunking, timestamp parsing & ISO formatting
-│   ├── data/cache/           # Git-ignored deterministic JSON response cache
-│   └── tests/                # Comprehensive test suite (18 test cases)
-└── frontend/                 # React 19 + TypeScript + Vite Frontend
-    ├── .env.example          # Frontend environment template
-    ├── Dockerfile            # Multi-stage build (Node 20 Alpine -> Nginx Alpine)
-    ├── nginx.conf            # Production Nginx SPA reverse proxy & caching rules
-    ├── vercel.json           # Vercel SPA rewrite configuration
-    ├── package.json          # Dependencies & scripts
-    ├── vite.config.ts        # Vite build configuration
+│   │       └── time.py              # Settlement period and UTC timestamp helpers
+│   ├── data/cache/                  # Git-ignored cache store (tracks .gitkeep)
+│   └── tests/                       # Complete pytest suite (unit + live BMRS tests)
+│
+└── frontend/                        # React 19 + TypeScript + Vite SPA
+    ├── .env.example                 # Frontend environment variable template
+    ├── Dockerfile                   # Multi-stage production build (Node 20 -> Nginx Alpine)
+    ├── nginx.conf                   # Reverse proxy, caching headers & SPA fallback routing
+    ├── vercel.json                  # Vercel deep-link routing rewrite rules
+    ├── package.json                 # Scripts, dependencies, and type definitions
+    ├── vite.config.ts               # Vite build and plugin configuration
     └── src/
-        ├── App.tsx           # Navigation shell & routing
-        ├── index.css         # Dark theme & styling tokens
-        ├── components/       # Reusable components
-        │   ├── charts/       # ActualVsForecastChart, ErrorDistributionChart
-        │   ├── dashboard/    # FilterToolbar, KpiGrid, CapacityBandCard
-        │   ├── layout/       # Header, Sidebar
-        │   └── tables/       # SettlementTable, ForecastPublicationTable
+        ├── App.tsx                  # Main router and shell layout
+        ├── index.css                # Dark-mode design system tokens
+        ├── components/
+        │   ├── charts/              # ActualVsForecastChart, ErrorDistributionChart
+        │   ├── dashboard/           # FilterToolbar, KpiGrid, CapacityBandCard
+        │   ├── layout/              # Header, Sidebar, Live Status Badges
+        │   └── tables/              # SettlementTable, ForecastPublicationTable
         ├── hooks/
-        │   └── useWindData.ts # Centralized data fetcher with status polling
-        ├── pages/            # Overview, Accuracy, History, DataQuality
+        │   └── useWindData.ts       # Central data fetcher with status polling
+        ├── pages/                   # Overview, Accuracy, History, DataQuality
         └── services/
-            └── api.ts        # Axios/Fetch API client with VITE_API_BASE_URL
+            └── api.ts               # Typed REST client with VITE_API_BASE_URL resolution
 ```
 
 ---
 
-## 3. Data Source Disclosure
+## Analytical Methodology
 
-UK Wind Intelligence relies directly on public, authoritative electricity market datasets published by the **Elexon Balancing Mechanism Reporting Service (BMRS)**:
+### 1. Great Britain Settlement Hierarchy
+The UK electricity network operates on a continuous 48-period settlement day. Each settlement period (SP) spans exactly 30 minutes in Coordinated Universal Time (UTC):
 
-1. **FUELHH (Half-Hourly Generation by Fuel Type)**:
-   - Endpoint: `/datasets/FUELHH`
-   - Filter: `fuelType=WIND`
-   - Resolution: 30-minute settlement periods (SP 1–48)
-   - Scope: National transmission-connected wind outturns in megawatts (MW).
-2. **WINDFOR (Wind Generation Forecast)**:
-   - Endpoint: `/datasets/WINDFOR`
-   - Fields: `publishTime` (release timestamp) and `startTime` (delivery target)
-   - Scope: National aggregated wind power forecasts.
+$$\text{SP}_1: \text{00:00–00:30 UTC} \quad \dots \quad \text{SP}_{48}: \text{23:30–24:00 UTC}$$
 
-> **Open Data Compliance**: Elexon BMRS data is published as Open Data under the UK Balancing and Settlement Code (BSC). An optional scripting API key can be configured via `BMRS_API_KEY` for higher throughput limits, but baseline usage works out-of-the-box without authentication.
+For the January 1–31, 2026 evaluation window, the platform evaluates:
+$$31 \text{ days} \times 48 \text{ periods/day} = 1,488 \text{ discrete settlement intervals}$$
 
----
+### 2. Day-Ahead Decision Gate Closure Filtering
+To evaluate physical and financial trading performance without hindsight bias:
+1. All WINDFOR forecasts published after the cutoff time (default: **12:00 UTC on D-1**) are excluded for delivery on Day D.
+2. For each delivery interval, the **latest valid publication issued prior to the cutoff** is retained.
+3. This models the exact information set available to market participants at Day-Ahead gate closure.
 
-## 4. Analytical Methodology & Limitations
+### 3. Resolution Alignment Engine
+- **FUELHH Outturns**: Reported per half-hour settlement period.
+- **WINDFOR Forecasts**: Published for 1-hour delivery intervals.
+- **Normalization**: Each 1-hour forecast is mapped to its two constituent settlement periods:
+  - Example: A forecast for hour ending `14:00` applies to **SP 27** (`13:00–13:30`) and **SP 28** (`13:30–14:00`).
 
-### Settlement Period Alignment
-The Great Britain electricity grid operates on a 48-period settlement day. Each settlement period (SP) spans 30 minutes, beginning at 00:00 UTC (SP 1: 00:00–00:30 UTC ... SP 48: 23:30–24:00 UTC).
+### 4. Mathematical Formulations
 
-### Day-Ahead Decision Gate Closure
-Trading teams commit physical and financial positions prior to the Day-Ahead Market (DAM) gate closure. To evaluate forecast skill accurately:
-1. All WINDFOR forecasts published after the cutoff time (default: **12:00 UTC on D-1**) are strictly disqualified from selection for delivery on Day D.
-2. For each delivery interval, the **most recent forecast published before the cutoff** is designated as the Day-Ahead forecast.
-3. This guarantees zero look-ahead bias in all computed metrics.
+Given $N$ matched settlement periods where $A_i$ represents actual generation and $F_i$ represents the selected Day-Ahead forecast:
 
-### Hourly to Half-Hourly Normalization
-BMRS WINDFOR forecasts are published in 1-hour increments, while actual FUELHH generation is reported in half-hour settlement periods. The matching engine maps each hourly forecast to its two constituent half-hourly settlement intervals (e.g., forecast for hour ending 14:00 applies to SP 27 [13:00–13:30] and SP 28 [13:30–14:00]).
+$$\text{Forecast Error } (e_i) = F_i - A_i$$
 
-### Mathematical Metrics
-For $N$ matched settlement intervals with actual generation $A_i$ and forecast $F_i$:
-- **Error**: $e_i = F_i - A_i$
-- **Mean Absolute Error (MAE)**:
-  $$\text{MAE} = \frac{1}{N} \sum_{i=1}^{N} |F_i - A_i|$$
-- **Root Mean Square Error (RMSE)**:
-  $$\text{RMSE} = \sqrt{\frac{1}{N} \sum_{i=1}^{N} (F_i - A_i)^2}$$
-- **Forecast Bias**:
-  $$\text{Bias} = \frac{1}{N} \sum_{i=1}^{N} (F_i - A_i)$$
-  *(A positive bias indicates systematic over-forecasting; a negative bias indicates systematic under-forecasting).*
+$$\text{Mean Absolute Error (MAE)} = \frac{1}{N} \sum_{i=1}^{N} |F_i - A_i|$$
 
-### Limitations
-- **Transmission-Connected Scope**: Covers transmission system-connected wind farms reporting through BMRS. Small-scale distributed or embedded wind generation is not captured in FUELHH.
-- **External API Availability**: Analysis depends on Elexon BMRS endpoint uptime. The backend implements local caching and retry policies to maintain high availability during upstream maintenance.
+$$\text{Root Mean Square Error (RMSE)} = \sqrt{\frac{1}{N} \sum_{i=1}^{N} (F_i - A_i)^2}$$
+
+$$\text{Forecast Bias} = \frac{1}{N} \sum_{i=1}^{N} (F_i - A_i)$$
+
+$$\text{Coverage Rate (\%)} = \left( \frac{N_{\text{matched}}}{N_{\text{total}}} \right) \times 100$$
+
+> **Bias Interpretation**: A positive bias ($+e$) denotes systematic over-forecasting (risk of short uncontracted generation), whereas a negative bias ($-e$) denotes systematic under-forecasting (risk of spill or curtailment).
 
 ---
 
-## 5. Environment Variables
+## REST API Specification
 
-All configuration is handled cleanly through environment variables:
+### Base URL
+- **Local**: `http://localhost:8000`
+- **Production**: Configured via cloud container hosting (e.g., Render/Railway)
+
+### Key Endpoints
+
+#### 1. System Health & Upstream Probe
+```http
+GET /health
+```
+**Response (200 OK):**
+```json
+{
+  "status": "healthy",
+  "version": "1.0.0",
+  "timestamp": "2026-10-24T14:45:00Z",
+  "elexon_bmrs": {
+    "status": "healthy",
+    "latency_ms": 142.5,
+    "endpoint": "https://data.elexon.co.uk/bmrs/api/v1/datasets/FUELHH"
+  }
+}
+```
+
+#### 2. Comprehensive Analytics Payload
+```http
+GET /api/v1/analytics?start_date=2026-01-01&end_date=2026-01-31&cutoff_time=12:00&force_refresh=false
+```
+**Query Parameters:**
+| Parameter | Type | Default | Description |
+| :--- | :--- | :--- | :--- |
+| `start_date` | `string` | `2026-01-01` | Start of delivery window (`YYYY-MM-DD`). |
+| `end_date` | `string` | `2026-01-31` | End of delivery window (`YYYY-MM-DD`). |
+| `cutoff_time` | `string` | `12:00` | Gate closure cutoff in UTC (`HH:MM`). |
+| `force_refresh` | `boolean` | `false` | Bypasses local disk cache when `true`. |
+
+**Response (200 OK):**
+```json
+{
+  "kpis": {
+    "mae_mw": 2021.4,
+    "rmse_mw": 2481.2,
+    "forecast_bias_mw": 1806.1,
+    "matched_data_coverage_percent": 100.0,
+    "total_settlement_periods": 1488,
+    "matched_periods": 1488,
+    "unmatched_periods": 0
+  },
+  "capacity_band_breakdown": [
+    { "category": "Low Wind (< 5 GW)", "period_count": 312, "mae_mw": 1140.2, "frequency_percent": 21.0 },
+    { "category": "Medium Wind (5–12 GW)", "period_count": 784, "mae_mw": 1890.6, "frequency_percent": 52.7 },
+    { "category": "High Wind (> 12 GW)", "period_count": 392, "mae_mw": 2984.1, "frequency_percent": 26.3 }
+  ],
+  "intervals": [ ... ],
+  "publications_summary": [ ... ],
+  "metadata": { ... }
+}
+```
+
+#### 3. Data Diagnostics & Cache Telemetry
+```http
+GET /api/v1/data/diagnostics?start_date=2026-01-01&end_date=2026-01-31
+```
+Audits missing settlement periods, record deduplication counts, and local disk cache performance.
+
+---
+
+## Environment Configuration
+
+Configuration is managed via environment variables. Copy `.env.example` to `.env` before running:
 
 | Variable | Scope | Default | Description |
 | :--- | :--- | :--- | :--- |
-| `VITE_API_BASE_URL` | Frontend | `http://localhost:8000` | Target URL used by the browser to make REST calls. In production, set to your backend domain (e.g. `https://<your-backend>.onrender.com`). |
-| `BMRS_API_BASE_URL` | Backend | `https://data.elexon.co.uk/bmrs/api/v1` | Public Elexon BMRS REST API base URL. |
-| `BMRS_API_KEY` | Backend | `""` *(empty)* | Optional Elexon API key for higher rate limits. |
-| `DEFAULT_CUTOFF_TIME` | Backend | `12:00` | Default Day-Ahead cutoff time in UTC (`HH:MM`). |
-| `DEFAULT_START_DATE` | Backend | `2026-01-01` | Default analysis window start date (`YYYY-MM-DD`). |
-| `DEFAULT_END_DATE` | Backend | `2026-01-31` | Default analysis window end date (`YYYY-MM-DD`). |
-| `CACHE_ENABLED` | Backend | `true` | Enables deterministic disk-caching of upstream BMRS payloads. |
-| `CACHE_TTL_HOURS` | Backend | `24` | Cache expiration time in hours. |
-| `HTTP_TIMEOUT_SECONDS`| Backend | `30.0` | Upstream request timeout. |
-| `MAX_CHUNK_DAYS` | Backend | `6` | Query chunk duration (respects Elexon's 7-day API limit). |
-| `CORS_ORIGINS` | Backend | `http://localhost:5173,http://127.0.0.1:5173` | Comma-separated allowed frontend origins. (Regex also supports all `*.vercel.app` domains). |
-| `PORT` | Backend | `8000` | Port for the Uvicorn server (automatically provided by cloud platforms like Render). |
+| `VITE_API_BASE_URL` | Frontend | `http://localhost:8000` | Target URL used by the browser client to initiate REST requests. Set to your deployed backend URL in production. |
+| `BMRS_API_BASE_URL` | Backend | `https://data.elexon.co.uk/bmrs/api/v1` | Public Elexon BMRS endpoint. |
+| `BMRS_API_KEY` | Backend | `""` *(empty)* | Optional scripting key for higher rate limits. |
+| `DEFAULT_CUTOFF_TIME`| Backend | `12:00` | Default Day-Ahead decision gate closure time in UTC. |
+| `DEFAULT_START_DATE` | Backend | `2026-01-01` | Default analysis range start date (`YYYY-MM-DD`). |
+| `DEFAULT_END_DATE` | Backend | `2026-01-31` | Default analysis range end date (`YYYY-MM-DD`). |
+| `CACHE_ENABLED` | Backend | `true` | Enables deterministic disk-backed caching. |
+| `CACHE_TTL_HOURS` | Backend | `24` | Upstream cache invalidation lifespan. |
+| `HTTP_TIMEOUT_SECONDS`| Backend| `30.0` | Upstream request timeout. |
+| `MAX_CHUNK_DAYS` | Backend | `6` | Query chunk duration (respects Elexon 7-day API cap). |
+| `CORS_ORIGINS` | Backend | `http://localhost:5173,http://127.0.0.1:5173` | Allowed origins (middleware regex also permits all `*.vercel.app` domains). |
+| `PORT` | Backend | `8000` | Port for the Uvicorn application server. |
 
 ---
 
-## 6. Local Development Setup
+## Local Development
 
 ### Prerequisites
-- Python 3.11+
-- Node.js 18+ & npm
+- **Python**: 3.11+
+- **Node.js**: 18+ (npm 9+)
 
-### Backend Setup
-1. Navigate to the backend directory:
-   ```bash
-   cd backend
-   ```
-2. Create and activate a virtual environment:
-   ```bash
-   python -m venv .venv
-   # Windows:
-   .venv\Scripts\activate
-   # macOS/Linux:
-   source .venv/bin/activate
-   ```
-3. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-4. Copy the environment template:
-   ```bash
-   cp .env.example .env
-   ```
-5. Launch the development server:
-   ```bash
-   python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
-   ```
-   *The API will be available at `http://127.0.0.1:8000`, and interactive docs at `http://127.0.0.1:8000/docs`.*
+### 1. Backend Service
+```bash
+# Navigate to backend directory
+cd backend
 
-### Frontend Setup
-1. Open a new terminal and navigate to the frontend directory:
-   ```bash
-   cd frontend
-   ```
-2. Install npm packages:
-   ```bash
-   npm install
-   ```
-3. Copy the environment template:
-   ```bash
-   cp .env.example .env
-   ```
-4. Start the Vite dev server:
-   ```bash
-   npm run dev -- --host 127.0.0.1 --port 5173
-   ```
-   *The web dashboard will be live at `http://127.0.0.1:5173`.*
+# Create and activate virtual environment
+python -m venv .venv
+
+# Windows:
+.venv\Scripts\activate
+# macOS/Linux:
+source .venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Copy environment template
+cp .env.example .env
+
+# Run FastAPI development server with hot-reload
+python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
+```
+*API will be available at `http://127.0.0.1:8000` with Swagger docs at `http://127.0.0.1:8000/docs`.*
+
+### 2. Frontend Dashboard
+```bash
+# In a new terminal, navigate to frontend directory
+cd frontend
+
+# Install npm packages
+npm install
+
+# Copy environment template
+cp .env.example .env
+
+# Start Vite development server
+npm run dev -- --host 127.0.0.1 --port 5173
+```
+*Dashboard will be available at `http://127.0.0.1:5173`.*
 
 ---
 
-## 7. Docker Orchestration
+## Containerized Deployment (Docker)
 
-Both services can be run as production-grade containers using `docker-compose.yml`:
+Both components can be orchestrated locally or in cloud container environments using Docker:
 
-### Build and Run with Docker Compose
 ```bash
-# Build images and start services in detached mode
+# Build and start all services in detached mode
 docker compose up --build -d
 
-# Check service health status
+# Inspect running container health status
 docker compose ps
 
-# View container logs
+# Follow application logs
 docker compose logs -f
 
-# Shut down services and networks
+# Stop and remove containers and networks
 docker compose down
 ```
 
-### Standalone Docker Builds
+### Standalone Docker Images
 
 **Backend Container:**
 ```bash
@@ -250,7 +357,6 @@ docker run -p 8000:8000 -e CORS_ORIGINS="http://localhost:5173" uk-wind-intel-ba
 
 **Frontend Container:**
 ```bash
-# Pass the production API URL at build time so Vite injects it into client assets
 docker build -t uk-wind-intel-frontend \
   --build-arg VITE_API_BASE_URL="http://localhost:8000" \
   ./frontend
@@ -259,47 +365,42 @@ docker run -p 5173:5173 uk-wind-intel-frontend
 
 ---
 
-## 8. Testing & Validation
+## Quality Assurance & Verification
 
-### Backend Test Suite
-Run the full test suite with pytest:
+### Backend Pytest Suite
+Run the unit and integration test suite:
 ```bash
-# Fast unit tests (analytics, matcher, selector, API schemas, cache)
+# Run unit tests (analytics, matcher, forecast selector, schemas, cache)
 python -m pytest backend/tests/test_analytics.py backend/tests/test_api_routes.py backend/tests/test_cache.py backend/tests/test_forecast_selector.py backend/tests/test_matcher.py -v
 
-# Live Elexon BMRS integration tests
+# Run live Elexon BMRS integration tests
 python -m pytest backend/tests/test_elexon_live.py -v
 ```
 
-### Frontend Lint and Build Verification
+### Frontend Code Quality & Production Build
 ```bash
 cd frontend
 
-# Run Oxlint
+# Run Oxlint (116 rules checked across 26 files)
 npm run lint
 
-# Compile TypeScript and generate production Vite bundle
+# Compile TypeScript and generate minified production bundle
 npm run build
 ```
 
 ---
 
-## 9. Recommended Production Deployment Setup
+## Production Deployment Guide
 
-For optimal performance, low latency, and zero server maintenance, the recommended hosting strategy is:
-- **Frontend**: [Vercel](https://vercel.com) (Static SPA hosting on Global Edge Network, automatic HTTPS, continuous deployment from Git).
-- **Backend**: [Render](https://render.com) or [Railway](https://railway.app) (Native Python or Docker container service, automatic health checks, automatic TLS).
+### Architecture Overview
+- **Frontend**: [Vercel](https://vercel.com) (Global Edge CDN, automated HTTPS, zero-config SPA rewrites).
+- **Backend**: [Render](https://render.com) or [Railway](https://railway.app) (Python 3 container web service with health monitoring).
 
----
-
-## 10. Step-by-Step Deployment Instructions
-
-### Step 1: Deploy Backend to Render (or Railway)
-1. Push your repository to GitHub.
-2. Sign in to [Render](https://dashboard.render.com/) and click **New +** > **Web Service**.
-3. Select your repository.
-4. Configure service settings:
-   - **Name**: `uk-wind-intelligence-backend`
+### Step 1: Deploy Backend on Render
+1. Push your repository to GitHub: `https://github.com/Chandru9842/kjhwr`.
+2. In the [Render Dashboard](https://dashboard.render.com/), click **New +** → **Web Service**.
+3. Select `Chandru9842/kjhwr`.
+4. Configure service parameters:
    - **Root Directory**: `backend`
    - **Runtime**: `Python 3`
    - **Build Command**: `pip install -r requirements.txt`
@@ -307,37 +408,32 @@ For optimal performance, low latency, and zero server maintenance, the recommend
 5. Add Environment Variables:
    - `BMRS_API_BASE_URL`: `https://data.elexon.co.uk/bmrs/api/v1`
    - `CACHE_ENABLED`: `true`
-   - `CORS_ORIGINS`: `https://<your-project-name>.vercel.app` *(add after step 2)*
-6. Click **Create Web Service**. Once deployed, copy your backend URL:
-   `https://<your-backend-app>.onrender.com`
-7. Verify backend health by visiting:
-   `https://<your-backend-app>.onrender.com/health`
+   - `CORS_ORIGINS`: `https://kjhwr-theta.vercel.app`
+6. Click **Create Web Service** and note your public backend URL (`https://<your-backend-app>.onrender.com`).
 
-### Step 2: Deploy Frontend to Vercel
-1. Sign in to [Vercel](https://vercel.com/) and click **Add New...** > **Project**.
-2. Import your GitHub repository.
-3. Configure project settings:
-   - **Framework Preset**: `Vite`
-   - **Root Directory**: `frontend`
-   - **Build Command**: `npm run build`
-   - **Output Directory**: `dist`
-4. In the **Environment Variables** section, add:
+### Step 2: Configure Frontend on Vercel
+1. Open your project on the [Vercel Dashboard](https://vercel.com/).
+2. Navigate to **Settings** → **Environment Variables**.
+3. Add the variable:
    - **Key**: `VITE_API_BASE_URL`
-   - **Value**: `https://<your-backend-app>.onrender.com` *(from Step 1)*
-5. Click **Deploy**. Vercel will build the frontend and provide your live URL:
-   `https://<your-project-name>.vercel.app`
+   - **Value**: `https://<your-backend-app>.onrender.com`
+4. Under the **Deployments** tab, select **Redeploy** to compile the bundle with the backend URL.
 
-### Step 3: Verify Public Access
-1. Visit your live frontend URL (`https://<your-project-name>.vercel.app`).
-2. Verify that the **System Status** dot in the sidebar indicates `Live BMRS`.
-3. Check the **Overview Page**: Verify KPI cards populate with live MAE, RMSE, and Bias metrics, and the chart renders without errors.
-4. Navigate through **Forecast Accuracy**, **Forecast History**, and **Data Quality** to confirm all analytics and deep routes function smoothly.
+### Step 3: Verify Public Integration
+1. Navigate to [https://kjhwr-theta.vercel.app/](https://kjhwr-theta.vercel.app/).
+2. Verify that the **System Status** badge displays a green indicator with `Live BMRS`.
+3. Confirm that all four analytical views (**Overview**, **Forecast Accuracy**, **Forecast History**, and **Data Quality**) render live data without console errors.
 
 ---
 
-## 11. AI Tools Used
+## Data Governance & Attribution
 
-This application was engineered and integrated utilizing:
-- **Google Antigravity IDE**: AI-assisted software engineering and agentic pair-programming environment.
-- **Claude 3.5 Sonnet & Gemini Foundation Models**: Code synthesis, mathematical verification of electricity market formulas, and responsive UI component development.
-- **Oxlint**: High-speed Rust-based JavaScript/TypeScript linter.
+- **Data Attribution**: Electricity generation outturns and forecasts are derived from the **Elexon Balancing Mechanism Reporting Service (BMRS)**.
+- **Licensing & Terms**: Data is provided under the terms of the UK Balancing and Settlement Code (BSC) open data policy.
+- **Application Code License**: Distributed under the [MIT License](https://opensource.org/licenses/MIT).
+
+---
+
+<div align="center">
+  <sub>Engineered with precision for GB power market analytics. Pair-programmed with Google Antigravity IDE.</sub>
+</div>
