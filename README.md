@@ -65,34 +65,34 @@ The system enforces strict **Day-Ahead Decision Gate Closure compliance** (12:00
 
 ```mermaid
 flowchart TD
-    subgraph Upstream["Upstream Data Source (Elexon BMRS)"]
-        BMRS_FUELHH["Elexon BMRS API<br/>/datasets/FUELHH (WIND Actuals)<br/>30-Min Settlement Periods"]
-        BMRS_WINDFOR["Elexon BMRS API<br/>/datasets/WINDFOR (Forecasts)<br/>Hourly Delivery Bands"]
+    subgraph Upstream["Upstream Data Source - Elexon BMRS"]
+        BMRS_FUELHH["Elexon BMRS API: FUELHH<br/>WIND Outturn Actuals<br/>30-Min Settlement Periods"]
+        BMRS_WINDFOR["Elexon BMRS API: WINDFOR<br/>National Wind Forecasts<br/>Hourly Delivery Bands"]
     end
 
     subgraph BackendEngine["Python FastAPI Analytics Engine"]
-        HTTPX["Resilient HTTPX Client<br/>• Exponential Backoff<br/>• 6-Day Chunking Engine"]
-        CACHE["Deterministic Cache<br/>Disk-backed JSON Storage"]
-        SELECTOR["Gate Closure Selector<br/>Enforces Cutoff (12:00 UTC D-1)"]
+        HTTPX["Resilient HTTPX Client<br/>Exponential Backoff & Chunking"]
+        CACHE[("Deterministic Cache<br/>Disk-backed JSON Store")]
+        SELECTOR["Gate Closure Selector<br/>Cutoff Enforcement: 12:00 UTC D-1"]
         MATCHER["Settlement Matcher<br/>Hourly to 30-Min Resolution"]
-        ANALYTICS["Analytics Core<br/>• MAE / RMSE / Bias<br/>• Capacity Band Breakdown"]
-        API_ROUTES["FastAPI REST Routes<br/>/health • /analytics • /diagnostics"]
+        ANALYTICS["Analytics Core<br/>MAE, RMSE, Bias & Capacity Bands"]
+        API_ROUTES["FastAPI REST Routes<br/>/health, /analytics, /diagnostics"]
     end
 
     subgraph FrontendApp["React 19 Frontend Dashboard"]
-        VITE_APP["Vite Client Application<br/>Tailwind CSS • Recharts • Lucide"]
-        PAGES["Analytical Views<br/>Overview • Accuracy • History • Diagnostics"]
+        VITE_APP["Vite Client Application<br/>Tailwind CSS & Recharts"]
+        PAGES["Analytical Views<br/>Overview, Accuracy, History, Diagnostics"]
     end
 
-    BMRS_FUELHH -->|Outturn Data| HTTPX
-    BMRS_WINDFOR -->|Forecast Runs| HTTPX
-    HTTPX <--> CACHE
-    HTTPX --> SELECTOR
-    SELECTOR --> MATCHER
-    MATCHER --> ANALYTICS
-    ANALYTICS --> API_ROUTES
-    API_ROUTES -->|JSON Payloads (CORS)| VITE_APP
-    VITE_APP --> PAGES
+    BMRS_FUELHH -->|"Outturn Data"| HTTPX
+    BMRS_WINDFOR -->|"Forecast Runs"| HTTPX
+    HTTPX ---|"Cache Read / Write"| CACHE
+    HTTPX -->|"Raw Datasets"| SELECTOR
+    SELECTOR -->|"Day-Ahead Forecasts"| MATCHER
+    MATCHER -->|"Matched Intervals"| ANALYTICS
+    ANALYTICS -->|"Computed Metrics"| API_ROUTES
+    API_ROUTES -->|"JSON Payloads via CORS"| VITE_APP
+    VITE_APP -->|"Renders Views"| PAGES
 ```
 
 ---
