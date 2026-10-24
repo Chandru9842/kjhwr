@@ -15,7 +15,7 @@ A high-precision, production-grade intelligence platform engineered for energy t
 
 | Component | Target Hosting | Live URL | Status |
 | :--- | :--- | :--- | :--- |
-| **Frontend Web App** | Vercel | `https://<your-project-name>.vercel.app` | Ready to Deploy |
+| **Frontend Web App** | Vercel | [https://kjhwr-theta.vercel.app/](https://kjhwr-theta.vercel.app/) | Deployed (Active) |
 | **Backend REST API** | Render / Railway | `https://<your-backend-app>.onrender.com` | Ready to Deploy |
 | **Interactive API Docs** | Swagger / OpenAPI | `https://<your-backend-app>.onrender.com/docs` | Ready to Deploy |
 | **API Health Check** | FastAPI Probe | `https://<your-backend-app>.onrender.com/health` | Ready to Deploy |
